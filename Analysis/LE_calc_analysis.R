@@ -3121,5 +3121,27 @@ ggplot(df %>% mutate(race=factor(race, levels=c("Overall", "NHW", "NHB", "NHAPI"
   theme(legend.position="bottom", legend.title=element_blank())
 
 
-
-
+# Relative vs Absolute LV
+df <- results_longitudinal %>% mutate(year5=substr(year5, 1, 4)) %>% 
+  #filter(gender=="Men") %>% 
+  select(year5, gender, race, metro2, le, lci, uci, lv, sd) %>% 
+  mutate(race=factor(race, levels=c("Overall", "NHW", "NHB", "NHAPI", "H"),
+                     labels=c("Overall", "White", "Black", "Asian/Pacific Islander", "Hispanic")),
+         year5b=ifelse(year5%in%c(1990, 2015), year5, "")) %>% 
+  arrange(race, metro2, year5)  # manually computing CV: isabel to fix
+ggplot(df, aes(x=lv, y=sd, group=gender)) +
+  geom_path(aes(color=race, linetype=gender))+
+  geom_point(aes(fill=race, shape=gender), size=3, color="black") +
+  geom_text_repel(aes(label=year5b)) +
+  scale_shape_manual(values=c(21, 24), 
+                     guide=guide_legend(override.aes=list(fill="black", color="black")))+
+  facet_grid(metro2~race, labeller = label_wrap_gen(width=26))+
+  scale_fill_manual(values=race_cols)+
+  scale_color_manual(values=race_cols)+
+  labs(x="Relative Lifespan Variation (coefficient of variation)",
+       y="Absolute Lifespan Variation (Standard deviation)",
+       color="", fill="", shape="Gender", linetype="Gender")+
+  guides(fill="none", color="none")+
+  isabel_theme+
+  theme(legend.position="bottom", legend.title=element_blank())
+ggsave("Tables & Figures/A5_sd_vs_lv.pdf", width=20, height=15, scale=0.9)
